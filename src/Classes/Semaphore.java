@@ -1,5 +1,7 @@
 package Classes;
 
+import java.security.InvalidParameterException;
+
 /**
  * Counting semaphore (as described in the labs).
  *
@@ -17,14 +19,25 @@ public class Semaphore {
     private int permits;
 
     public Semaphore(int initialPermits) {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+        if (initialPermits < 0)
+            throw new InvalidParameterException("Initial permits can't be negative");
+
+        permits = initialPermits;
     }
 
     /** Blocks until a permit is available, then takes it. */
-    public void acquire() {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+    public synchronized void acquire() {
+        while (permits == 0)
+        {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }
+
+        permits--;
     }
 
     /**
@@ -32,19 +45,42 @@ public class Semaphore {
      *
      * @return true if a permit was taken, false if the time ran out
      */
-    public boolean tryAcquire(long timeoutMs) {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+    public synchronized boolean tryAcquire(long timeoutMs) {
+        if (timeoutMs == 0) {
+            if (permits == 0)
+                return false;
+
+            permits--;
+            return true;
+        }
+
+        long deadline = System.currentTimeMillis() + timeoutMs;
+
+        while (permits == 0) {
+            long remaining = deadline - System.currentTimeMillis();
+
+            if (remaining <= 0)
+                return false;
+
+            try {
+                wait(remaining);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }
+
+        permits--;
+        return true;
     }
 
     /** Returns a permit and wakes one waiting thread. */
-    public void release() {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+    public synchronized void release() {
+        permits++;
+        notify();
     }
 
-    public int getAvailablePermits() {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+    public synchronized int getAvailablePermits() {
+        return permits;
     }
 }
