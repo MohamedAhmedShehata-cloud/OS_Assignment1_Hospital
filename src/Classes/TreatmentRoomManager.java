@@ -1,9 +1,10 @@
 package Classes;
+
 /* Finished */
 public class TreatmentRoomManager {
-
+    // static total rooms to change it in one place
     private static final int TOTAL_ROOMS = 2;
-
+    // composition
     private final Semaphore roomSemaphore;
 
     public TreatmentRoomManager() {
