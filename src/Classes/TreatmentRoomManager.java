@@ -1,29 +1,33 @@
 package Classes;
-
 /**
- * Guards the hospital's treatment rooms.
+ * Guards the hospital's treatment rooms (a resource independent from the waiting room).
  *
- * <p>Independent from the waiting room: it owns its own counting semaphore
- * whose permits are the rooms that are currently free.
+ * OWNER: (you)
+ *
+ * CONTRACT other classes rely on:
+ *  - There are exactly TOTAL_ROOMS (2) rooms in the whole hospital.
+ *  - tryAcquireRoom(ms) returns true if a room was taken, false if none became
+ *    free within ms milliseconds.
+ *  - releaseRoom() gives a room back.
  */
 public class TreatmentRoomManager {
 
     private static final int TOTAL_ROOMS = 2;
 
-    private final Semaphore roomSemaphore = new Semaphore(TOTAL_ROOMS);
+    private final Semaphore roomSemaphore;
 
-    /**
-     * Tries to take a free room.
-     *
-     * @param timeoutMs maximum time to wait for a room
-     * @return true if a room was acquired, false if the time ran out
-     */
-    public boolean tryAcquireRoom(long timeoutMs) {
-        return roomSemaphore.tryAcquire(timeoutMs);
+    public TreatmentRoomManager() {
+        // TODO: initialize roomSemaphore
+        this.roomSemaphore = null;
     }
 
-    /** Gives a previously acquired room back. */
+    public boolean tryAcquireRoom(long timeoutMs) {
+        // TODO
+        throw new UnsupportedOperationException("TODO");
+    }
+
     public void releaseRoom() {
-        roomSemaphore.release();
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 }

@@ -1,14 +1,24 @@
 package Classes;
-
 /**
  * Bounded buffer (circular queue) of patients waiting for a doctor.
  *
- * <p>Classic producer-consumer synchronization with three semaphores:
- * <ul>
- *   <li>{@code emptySeats}        - free seats; patients (producers) wait on it</li>
- *   <li>{@code availablePatients} - occupied seats; doctors (consumers) wait on it</li>
- *   <li>{@code mutex}             - protects the buffer indices and the count</li>
- * </ul>
+ * OWNER: (you)
+ *
+ * Producer-consumer with three semaphores:
+ *   - emptySeats        : free seats      (patients wait on it)
+ *   - availablePatients : occupied seats  (doctors wait on it)
+ *   - mutex             : protects buffer / head / tail / count
+ *
+ * CONTRACT other classes rely on:
+ *  - enterWaitingRoom(p) is called by a new patient AND by a doctor who sends a
+ *    patient back. It blocks while the room is full. It logs:
+ *        "The waiting room is full."  +  "<name> is waiting outside for an available seat."
+ *        (only if no seat is free), and "<name> entered the waiting room." when seated.
+ *    It also sets the patient state (WAITING_OUTSIDE / IN_WAITING_ROOM).
+ *    Tip: tryAcquire(0) on emptySeats lets you check "full?" and reserve the seat atomically.
+ *  - takeNextPatient(doctor) blocks while the room is empty (the doctor is idle).
+ *    It returns null if the simulation ended while waiting.
+ *  - wakeUpWaitingDoctors(n) is called once at the end so idle doctors can finish.
  */
 public class WaitingRoom {
 
@@ -24,79 +34,30 @@ public class WaitingRoom {
     private final Hospital hospital;
 
     public WaitingRoom(int capacity, Hospital hospital) {
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("Waiting room capacity must be positive");
-        }
         this.capacity = capacity;
         this.hospital = hospital;
         this.buffer = new Patient[capacity];
-        this.mutex = new Semaphore(1);
-        this.emptySeats = new Semaphore(capacity);
-        this.availablePatients = new Semaphore(0);
+        // TODO: initialize mutex, emptySeats, availablePatients with the right permits
+        this.mutex = null;
+        this.emptySeats = null;
+        this.availablePatients = null;
     }
 
-    /**
-     * Producer side. Used both by a newly arrived patient and by a doctor who
-     * sends a patient back. Blocks outside the room while no seat is free.
-     */
+    /** Producer side: puts a patient in the buffer (blocks while the room is full). */
     public void enterWaitingRoom(Patient patient) {
-        // Non-blocking attempt keeps the "is it full?" check and the
-        // seat reservation atomic, so the log can never lie.
-        if (!emptySeats.tryAcquire(0)) {
-            patient.setState(PatientState.WAITING_OUTSIDE);
-            hospital.logEvent("The waiting room is full.");
-            hospital.logEvent(patient.getName() + " is waiting outside for an available seat.");
-            emptySeats.acquire();
-        }
-
-        mutex.acquire();
-        try {
-            buffer[tail] = patient;
-            tail = (tail + 1) % capacity;
-            count++;
-            patient.setState(PatientState.IN_WAITING_ROOM);
-            hospital.logEvent(patient.getName() + " entered the waiting room.");
-        } finally {
-            mutex.release();
-        }
-
-        availablePatients.release();
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
-    /**
-     * Consumer side. Blocks (the doctor is idle) until a patient is available.
-     *
-     * @return the next patient, or {@code null} if the simulation has ended
-     */
+    /** Consumer side: removes and returns the next patient (blocks while empty). */
     public Patient takeNextPatient(Doctor doctor) {
-        availablePatients.acquire();
-
-        if (!hospital.isSimulationActive()) {
-            return null;
-        }
-
-        Patient patient;
-        mutex.acquire();
-        try {
-            patient = buffer[head];
-            buffer[head] = null;
-            head = (head + 1) % capacity;
-            count--;
-        } finally {
-            mutex.release();
-        }
-
-        emptySeats.release();
-        return patient;
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
-    /**
-     * Called once when the simulation ends: wakes every idle doctor so it can
-     * see that the simulation is over and terminate.
-     */
+    /** Wakes every idle doctor at the end of the simulation. */
     public void wakeUpWaitingDoctors(int numDoctors) {
-        for (int i = 0; i < numDoctors; i++) {
-            availablePatients.release();
-        }
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 }

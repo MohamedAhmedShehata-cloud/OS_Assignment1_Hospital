@@ -1,12 +1,33 @@
 package Classes;
-
-import java.util.concurrent.ThreadLocalRandom;
-
+/**
+ * A doctor thread.
+ *
+ * OWNER: (you / Omar)
+ *
+ * run() loops while hospital.isSimulationActive():
+ *   1. state = IDLE; patient = waitingRoom.takeNextPatient(this)
+ *      (null means the simulation ended -> leave the loop)
+ *   2. handlePatient(patient)
+ *
+ * handlePatient(p) must do, in order:
+ *   - log "<doctor> is assigned to <p>."            (states: ASSIGNED, ASSIGNED_TO_DOCTOR)
+ *   - log "<doctor> is trying to acquire a treatment room."
+ *   - try to get a room for ROOM_ACQUIRE_TIMEOUT_MS (3 s)
+ *   - success: log "acquired a treatment room." -> treatPatient(p)
+ *              -> log "is now available." -> p.notifyTreatmentFinished()
+ *   - failure: log "could not acquire a treatment room."
+ *              -> returnPatientToWaitingRoom(p) -> log "is now available."
+ *
+ * treatPatient(p): log "begins treating <p>.", sleep a random time, log
+ *   "finished treating <p>.", then ALWAYS release the room (log "released the
+ *   treatment room." and release) even if something goes wrong.
+ *
+ * Important: the room must not be given back before its "released" line is
+ * logged, or another doctor's "acquired" line can show up first in the output.
+ */
 public class Doctor implements Runnable {
 
     private static final long ROOM_ACQUIRE_TIMEOUT_MS = 3000;
-    private static final int MIN_TREATMENT_MS = 2000;
-    private static final int MAX_TREATMENT_MS = 5000;
 
     private final int id;
     private volatile DoctorState state = DoctorState.IDLE;
@@ -26,72 +47,23 @@ public class Doctor implements Runnable {
 
     @Override
     public void run() {
-        try {
-            while (hospital.isSimulationActive()) {
-                state = DoctorState.IDLE;
-                Patient patient = waitingRoom.takeNextPatient(this);
-                if (patient == null) {
-                    break; // simulation finished while we were idle
-                }
-                handlePatient(patient);
-            }
-        } catch (RuntimeException e) {
-            // An interrupted semaphore wait ends this doctor cleanly.
-            Thread.currentThread().interrupt();
-        }
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
     private void handlePatient(Patient patient) {
-        currentPatient = patient;
-        state = DoctorState.ASSIGNED;
-        patient.setState(PatientState.ASSIGNED_TO_DOCTOR);
-        hospital.logEvent(getName() + " is assigned to " + patient.getName() + ".");
-
-        state = DoctorState.ACQUIRING_ROOM;
-        hospital.logEvent(getName() + " is trying to acquire a treatment room.");
-
-        if (treatmentRooms.tryAcquireRoom(ROOM_ACQUIRE_TIMEOUT_MS)) {
-            hospital.logEvent(getName() + " acquired a treatment room.");
-            treatPatient(patient);
-            becomeAvailable();
-            patient.notifyTreatmentFinished(); // patient then logs "left"
-        } else {
-            hospital.logEvent(getName() + " could not acquire a treatment room.");
-            returnPatientToWaitingRoom(patient);
-            becomeAvailable();
-        }
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
-    /** Runs the treatment and always gives the room back, even on interrupt. */
     private void treatPatient(Patient patient) {
-        state = DoctorState.TREATING;
-        patient.setState(PatientState.IN_TREATMENT);
-        hospital.logEvent(getName() + " begins treating " + patient.getName() + ".");
-        try {
-            Thread.sleep(ThreadLocalRandom.current()
-                    .nextInt(MIN_TREATMENT_MS, MAX_TREATMENT_MS + 1));
-            patient.setState(PatientState.TREATED);
-            hospital.logEvent(getName() + " finished treating " + patient.getName() + ".");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            // Log BEFORE releasing: once the permit is back another doctor may
-            // acquire it immediately, and its log line must not appear first.
-            hospital.logEvent(getName() + " released the treatment room.");
-            treatmentRooms.releaseRoom();
-        }
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
     private void returnPatientToWaitingRoom(Patient patient) {
-        hospital.logEvent(getName() + " is sending " + patient.getName()
-                + " back to the waiting room.");
-        waitingRoom.enterWaitingRoom(patient); // may block while the room is full
-    }
-
-    private void becomeAvailable() {
-        currentPatient = null;
-        state = DoctorState.IDLE;
-        hospital.logEvent(getName() + " is now available.");
+        // TODO
+        throw new UnsupportedOperationException("TODO");
     }
 
     public int getId() {
