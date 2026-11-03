@@ -25,6 +25,7 @@ public class WaitingRoom {
 
     private final int capacity;
     private final Patient[] buffer;
+
     private int head;
     private int tail;
     private int count;

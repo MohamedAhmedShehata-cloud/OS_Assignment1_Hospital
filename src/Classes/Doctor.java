@@ -171,9 +171,6 @@ public class Doctor implements Runnable {
     }
 
     private void returnPatientToWaitingRoom(Patient patient) {
-        // Update patient state
-        patient.setState(PatientState.IN_WAITING_ROOM);
-
         // Return patient to the waiting room queue
         waitingRoom.enterWaitingRoom(patient);
     }
