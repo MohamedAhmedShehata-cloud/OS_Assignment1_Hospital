@@ -2,7 +2,7 @@ package Classes;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Scanner;
 /**
  * Entry point: reads input, creates and starts all threads, prints events.
  *
@@ -36,18 +36,62 @@ public class Hospital {
 
     public static void main(String[] args) {
         // TODO: new Hospital(), readInputs(), startSimulation()
+        Hospital hospital = new Hospital();
+        hospital.readInputs();
+        hospital.startSimulation();
+
         throw new UnsupportedOperationException("TODO");
-    }
+    } 
 
     /** Reads capacity, number of doctors and number of patients (validate > 0). */
     public void readInputs() {
-        // TODO
+        do{ Scanner input = new Scanner(System.in);
+          System.out.print("Enter The Waiting Room Capacity: ")
+          waitingRoomCapacity = input.nextInt();          
+          
+          if (waitingRoomCapacity<=0)
+          System.out.println("waiting room capacity must be greater than Zero")
+          
+          }where(waitingRoomCapacity<=0)
+      
+        do{System.out.print("Enter The Number of doctors: ")
+            numDoctors = input.nextInt();
+
+             if (numDoctors<=0)
+          System.out.println("Number of Doctors must be greater than Zero")
+          
+          }where(numDoctors<=0)                            
+
+        do{
+           System.out.print("Enter The Number of patients: ")
+              numPatients = input.nextInt();
+              
+               if (numPatients<=0)
+          System.out.println("Number of patients must be greater than Zero")
+          
+          }where(numPatients<=0)
+      
+
         throw new UnsupportedOperationException("TODO");
     }
 
     /** Creates WaitingRoom, TreatmentRoomManager, doctors, patients; starts threads. */
     public void startSimulation() {
-        // TODO
+        treatedPatientsCount=0;
+        simulationActive = true;
+        waitingRoom = new waitingRoom(waitingRoomCapacity,this);
+        treatmentRooms= new TreatmentRoomManager();
+
+        List <Thread>thread=new ArrayList<>();
+        for(int i=0;i<numDoctors;i++)
+        {
+            Doctor doctor=new Doctor(i+1,waitingRoom,treatmentRooms,this);
+            doctors.add(doctor);
+            Thread doctorthread = new Thread(doctor);
+        }
+
+
+
         throw new UnsupportedOperationException("TODO");
     }
 
