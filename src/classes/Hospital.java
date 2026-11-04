@@ -36,11 +36,9 @@ public class Hospital {
     private final Semaphore completionMutex = new Semaphore(1);
     private final List<Thread> allThreads = new ArrayList<>();
 
-    public static void main(String[] args) {
-        Hospital hospital = new Hospital();
-        hospital.readInputs();
-        hospital.startSimulation();
-        for (Thread thread : hospital.allThreads) {
+    /** Waits for all threads (doctors and patients) to complete before exiting. */
+    public void waitForCompletion() {
+        for (Thread thread : allThreads) {
             try {
                 thread.join();
             } catch (InterruptedException e) {
