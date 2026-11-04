@@ -2,6 +2,7 @@ package Classes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Entry point: reads input, creates and starts all threads, prints events.
@@ -33,22 +34,81 @@ public class Hospital {
     private final List<Doctor> doctors = new ArrayList<>();
     private final List<Patient> patients = new ArrayList<>();
     private final Semaphore completionMutex = new Semaphore(1);
+    private final List<Thread> allThreads = new ArrayList<>();
 
     public static void main(String[] args) {
-        // TODO: new Hospital(), readInputs(), startSimulation()
-        throw new UnsupportedOperationException("TODO");
+        Hospital hospital = new Hospital();
+        hospital.readInputs();
+        hospital.startSimulation();
+        for (Thread thread : hospital.allThreads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
     }
 
     /** Reads capacity, number of doctors and number of patients (validate > 0). */
     public void readInputs() {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+        Scanner scanner = new Scanner(System.in);
+
+        do {
+            System.out.print("Enter The Waiting Room Capacity: ");
+            waitingRoomCapacity = scanner.nextInt();
+            if (waitingRoomCapacity <= 0) {
+                System.out.println("Waiting room capacity must be greater than Zero");
+            }
+        } while (waitingRoomCapacity <= 0);
+
+        do {
+            System.out.print("Enter The Number of doctors: ");
+            numDoctors = scanner.nextInt();
+            if (numDoctors <= 0) {
+                System.out.println("Number of Doctors must be greater than Zero");
+            }
+        } while (numDoctors <= 0);
+
+        do {
+            System.out.print("Enter The Number of patients: ");
+            numPatients = scanner.nextInt();
+            if (numPatients <= 0) {
+                System.out.println("Number of patients must be greater than Zero");
+            }
+        } while (numPatients <= 0);
     }
 
     /** Creates WaitingRoom, TreatmentRoomManager, doctors, patients; starts threads. */
     public void startSimulation() {
-        // TODO
-        throw new UnsupportedOperationException("TODO");
+        treatedPatientsCount = 0;
+        simulationActive = true;
+        waitingRoom = new WaitingRoom(waitingRoomCapacity, this);
+        treatmentRooms = new TreatmentRoomManager();
+        for (int i = 0; i < numDoctors; i++) {
+            Doctor doctor = new Doctor(i + 1, waitingRoom, treatmentRooms, this);
+            doctors.add(doctor);
+            Thread doctorThread = new Thread(doctor);
+            allThreads.add(doctorThread);
+            doctorThread.start();
+        }
+        logEvent("Patients arriving:");
+        StringBuilder arrivingList = new StringBuilder();
+        for (int i = 1; i <= numPatients; i++) {
+            if (i > 1) {
+                arrivingList.append(" ");
+            }
+            arrivingList.append("P").append(i);
+        }
+        logEvent(arrivingList.toString());
+
+        for (int i = 0; i < numPatients; i++) {
+            Patient patient = new Patient(i + 1, waitingRoom, this);
+            patients.add(patient);
+            Thread patientThread = new Thread(patient);
+            allThreads.add(patientThread);
+            patientThread.start();
+        }
     }
 
     public synchronized void logEvent(String message) {
@@ -56,8 +116,19 @@ public class Hospital {
     }
 
     public void onPatientLeft(Patient patient) {
-        // TODO (see the contract in the class comment)
-        throw new UnsupportedOperationException("TODO");
+
+        completionMutex.acquire();
+        try {
+            treatedPatientsCount++;
+            if (treatedPatientsCount == numPatients) {
+                simulationActive = false;
+                logEvent("All patients have been treated.");
+                waitingRoom.wakeUpWaitingDoctors(numDoctors);
+                logEvent("Simulation completed.");
+            }
+        } finally {
+            completionMutex.release();
+        }
     }
 
     public boolean isSimulationActive() {

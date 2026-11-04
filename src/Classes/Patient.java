@@ -28,8 +28,21 @@ public class Patient implements Runnable {
 
     @Override
     public void run() {
-        // TODO (see the steps in the class comment)
-        throw new UnsupportedOperationException("TODO");
+        // 1. log "<name> arrived."
+        hospital.logEvent(getName() + " arrived.");
+
+        // 2. waitingRoom.enterWaitingRoom(this)
+        waitingRoom.enterWaitingRoom(this);
+
+        // 3. treatmentDoneSemaphore.acquire() (sleep until the doctor finishes)
+        treatmentDoneSemaphore.acquire();
+
+        // 4. setState(LEFT), log "<name> left."
+        setState(PatientState.LEFT);
+        hospital.logEvent(getName() + " left.");
+
+        // 5. hospital.onPatientLeft(this)
+        hospital.onPatientLeft(this);
     }
 
     /** Called by the doctor when treatment is over; wakes the patient. */
