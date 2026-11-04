@@ -1,4 +1,4 @@
-package Classes;
+package classes;
 
 /**
  * Bounded buffer (circular queue) of patients waiting for a doctor.

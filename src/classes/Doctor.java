@@ -1,5 +1,5 @@
 
-package Classes;
+package classes;
 
 import java.util.concurrent.ThreadLocalRandom;
 
