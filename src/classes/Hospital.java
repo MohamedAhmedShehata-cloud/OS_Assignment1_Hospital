@@ -55,26 +55,26 @@ public class Hospital {
         Scanner scanner = new Scanner(System.in);
 
         do {
-            System.out.print("Enter The Waiting Room Capacity: ");
+            System.out.print("Waiting room capacity: ");
             waitingRoomCapacity = scanner.nextInt();
             if (waitingRoomCapacity <= 0) {
-                System.out.println("Waiting room capacity must be greater than Zero");
+                System.out.println("Waiting room capacity must be greater than zero.");
             }
         } while (waitingRoomCapacity <= 0);
 
         do {
-            System.out.print("Enter The Number of doctors: ");
+            System.out.print("Number of doctors: ");
             numDoctors = scanner.nextInt();
             if (numDoctors <= 0) {
-                System.out.println("Number of Doctors must be greater than Zero");
+                System.out.println("Number of doctors must be greater than zero.");
             }
         } while (numDoctors <= 0);
 
         do {
-            System.out.print("Enter The Number of patients: ");
+            System.out.print("Number of patients: ");
             numPatients = scanner.nextInt();
             if (numPatients <= 0) {
-                System.out.println("Number of patients must be greater than Zero");
+                System.out.println("Number of patients must be greater than zero.");
             }
         } while (numPatients <= 0);
     }
@@ -116,7 +116,6 @@ public class Hospital {
     }
 
     public void onPatientLeft(Patient patient) {
-
         completionMutex.acquire();
         try {
             treatedPatientsCount++;

@@ -1,26 +1,10 @@
-
 package classes;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-/*
- A doctor thread.
- OWNER: Omar / Mohamed
- run() loops while the simulation is active:
- 1. Wait for the next patient.
- 2. Handle the patient.
-
- handlePatient():
- 1. Log patient assignment.
- 2. Try to acquire a treatment room (3 seconds).
- 3. Treat the patient if successful.
- 4. Return the patient to the waiting room if unsuccessful.
-
- treatPatient():
- 1. Log treatment start.
- 2. Sleep for a random duration.
- 3. Log treatment completion.
- 4. Always release the treatment room.
+/**
+ * A doctor thread.
+ * OWNER: Omar / Mohamed
  */
 public class Doctor implements Runnable {
 
@@ -46,26 +30,19 @@ public class Doctor implements Runnable {
 
     @Override
     public void run() {
-
         while (hospital.isSimulationActive()) {
-
             try {
-                // Doctor defautly set to idle
                 state = DoctorState.IDLE;
 
-                // Take the next available patient
                 Patient patient = waitingRoom.takeNextPatient(this);
 
-                // Null = simulation ended
                 if (patient == null) {
                     break;
                 }
 
                 currentPatient = patient;
-                // Handle the assigned patient
                 handlePatient(patient);
             } catch (InterruptedException e) {
-                // Restore interrupted status and stop the doctor
                 Thread.currentThread().interrupt();
                 break;
             }
@@ -75,103 +52,55 @@ public class Doctor implements Runnable {
         currentPatient = null;
     }
 
-    private void handlePatient(Patient patient)
-            throws InterruptedException {
-
-        // Patient assigned to doctor
+    private void handlePatient(Patient patient) throws InterruptedException {
         state = DoctorState.ASSIGNED;
         patient.setState(PatientState.ASSIGNED_TO_DOCTOR);
+        hospital.logEvent(getName() + " is assigned to " + patient.getName() + ".");
 
-        hospital.logEvent(
-                getName() + " is assigned to" + patient.getName()
-        );
-
-        // Doctor starts trying to acquire a treatment room
         state = DoctorState.ACQUIRING_ROOM;
+        hospital.logEvent(getName() + " is trying to acquire a treatment room.");
 
-        hospital.logEvent(
-                getName() + " Tries to acquire a treatment room"
-        );
-
-        // Try acquiring a room with a 3-second timeout
-        boolean roomAcquired =
-                treatmentRooms.tryAcquireRoom(ROOM_ACQUIRE_TIMEOUT_MS);
+        boolean roomAcquired = treatmentRooms.tryAcquireRoom(ROOM_ACQUIRE_TIMEOUT_MS);
 
         if (roomAcquired) {
-            // Successfully acquired a treatment room
-            hospital.logEvent(
-                    getName() + " acquired a treatment room"
-            );
+            hospital.logEvent(getName() + " acquired a treatment room.");
 
             try {
-                // Treat the patient
                 treatPatient(patient);
             } finally {
-                // Log the release BEFORE returning the room semaphore.
-                hospital.logEvent(
-                        getName() + " released the treatment room"
-                );
+                hospital.logEvent(getName() + " released the treatment room.");
                 treatmentRooms.releaseRoom();
             }
 
-            // Doctor is now available
             state = DoctorState.IDLE;
-
-            hospital.logEvent(
-                    getName() + " is now available"
-            );
-
-            // Notify patient that treatment has finished
+            hospital.logEvent(getName() + " is now available.");
             patient.notifyTreatmentFinished();
 
         } else {
+            hospital.logEvent(getName() + " could not acquire a treatment room.");
+            hospital.logEvent(getName() + " is sending " + patient.getName() + " back to the waiting room.");
 
-            // No treatment room was available within 3 seconds
-            hospital.logEvent(
-                    getName() + " could not acquire a treatment room"
-            );
-
-            // Return patient to waiting room
             returnPatientToWaitingRoom(patient);
 
-            // Doctor is now available
             state = DoctorState.IDLE;
-
-            hospital.logEvent(
-                    getName() + " is now available"
-            );
+            hospital.logEvent(getName() + " is now available.");
         }
 
         currentPatient = null;
     }
 
-    private void treatPatient(Patient patient)
-            throws InterruptedException {
-
-        // Update states
+    private void treatPatient(Patient patient) throws InterruptedException {
         state = DoctorState.TREATING;
         patient.setState(PatientState.IN_TREATMENT);
+        hospital.logEvent(getName() + " begins treating " + patient.getName() + ".");
 
-        // Log treatment start
-        hospital.logEvent(
-                getName() + " begins treating " + patient.getName()
-        );
-
-        // Generate random treatment duration (2 to 5 seconds)
-        int treatmentTime = ThreadLocalRandom.current()
-                .nextInt(2000, 5001);
-
-        // Simulate treatment
+        int treatmentTime = ThreadLocalRandom.current().nextInt(2000, 5001);
         Thread.sleep(treatmentTime);
 
-        // Log treatment completion
-        hospital.logEvent(
-                getName() + " finished treating " + patient.getName()
-        );
+        hospital.logEvent(getName() + " finished treating " + patient.getName() + ".");
     }
 
     private void returnPatientToWaitingRoom(Patient patient) {
-        // Return patient to the waiting room queue
         waitingRoom.enterWaitingRoom(patient);
     }
 

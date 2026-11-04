@@ -2,24 +2,13 @@ package classes;
 
 /**
  * Bounded buffer (circular queue) of patients waiting for a doctor.
- * <p>
- * OWNER: (you)
- * <p>
+ *
+ * OWNER: Mohamed Ahmed (you)
+ *
  * Producer-consumer with three semaphores:
- * - emptySeats        : free seats      (patients wait on it)
- * - availablePatients : occupied seats  (doctors wait on it)
- * - mutex             : protects buffer / head / tail / count
- * <p>
- * CONTRACT other classes rely on:
- * - enterWaitingRoom(p) is called by a new patient AND by a doctor who sends a
- * patient back. It blocks while the room is full. It logs:
- * "The waiting room is full."  +  "<name> is waiting outside for an available seat."
- * (only if no seat is free), and "<name> entered the waiting room." when seated.
- * It also sets the patient state (WAITING_OUTSIDE / IN_WAITING_ROOM).
- * Tip: tryAcquire(0) on emptySeats lets you check "full?" and reserve the seat atomically.
- * - takeNextPatient(doctor) blocks while the room is empty (the doctor is idle).
- * It returns null if the simulation ended while waiting.
- * - wakeUpWaitingDoctors(n) is called once at the end so idle doctors can finish.
+ *   - emptySeats        : free seats      (patients wait on it)
+ *   - availablePatients : occupied seats  (doctors wait on it)
+ *   - mutex             : protects buffer / head / tail / count
  */
 public class WaitingRoom {
 
@@ -53,23 +42,25 @@ public class WaitingRoom {
      * Producer side: puts a patient in the buffer (blocks while the room is full).
      */
     public void enterWaitingRoom(Patient patient) {
-        if (emptySeats.tryAcquire(0)) {
+        if (!emptySeats.tryAcquire(0)) {
             patient.setState(PatientState.WAITING_OUTSIDE);
+            hospital.logEvent("The waiting room is full.");
+            hospital.logEvent(patient.getName() + " is waiting outside for an available seat.");
             emptySeats.acquire();
-            // need the logs
         }
+
         patient.setState(PatientState.IN_WAITING_ROOM);
-        // log
+
         mutex.acquire();
         try {
             buffer[tail] = patient;
             tail = (tail + 1) % capacity;
             count++;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         } finally {
             mutex.release();
         }
+
+        hospital.logEvent(patient.getName() + " entered the waiting room.");
         availablePatients.release();
     }
 
@@ -80,7 +71,6 @@ public class WaitingRoom {
         availablePatients.acquire();
         Patient patient = null;
         mutex.acquire();
-
         try {
             if (!hospital.isSimulationActive() && count == 0) {
                 return null;
@@ -89,8 +79,6 @@ public class WaitingRoom {
             buffer[head] = null;
             head = (head + 1) % capacity;
             count--;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         } finally {
             mutex.release();
         }
